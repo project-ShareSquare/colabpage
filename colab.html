@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Tech Collaboration Page</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Tech Collaboration Page</h1>
+        <nav>
+            <ul>
+                <li><a href="#">Home</a></li>
+                <li><a href="#">Collaboration Requests</a></li>
+                <li><a href="#">Profile</a></li>
+                <li><a href="#">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="collaboration-form">
+        <h2>Create a Collaboration Request</h2>
+        <form action="/collaboration-request" method="post">
+            <label for="project-description">Project Description</label>
+            <textarea id="project-description" name="project-description" rows="4" required></textarea>
+
+            <label for="skills-needed">Skills Needed</label>
+            <input type="text" id="skills-needed" name="skills-needed" required>
+
+            <label for="deadline">Deadline</label>
+            <input type="date" id="deadline" name="deadline" required>
+
+            <label for="contact-info">Contact Information</label>
+            <input type="text" id="contact-info" name="contact-info" required>
+
+            <label for="additional-comments">Additional Comments</label>
+            <textarea id="additional-comments" name="additional-comments" rows="4"></textarea>
+
+            <button type="submit">Post Request</button>
+        </form>
+    </section>
+
+    <section class="collaboration-requests">
+        <h2>Collaboration Requests</h2>
+        <!-- Display collaboration requests here (dynamic content) -->
+        <div class="request">
+            <h3>Project Title</h3>
+            <p>Skills Needed: Skill1, Skill2, Skill3</p>
+            <p>Deadline: MM/DD/YYYY</p>
+            <p>Contact: email@example.com</p>
+            <p>Additional Comments: Lorem ipsum dolor sit amet.</p>
+            <button>Contact</button>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2023 Tech Collaboration Page</p>
+    </footer>
+</body>
+</html>
