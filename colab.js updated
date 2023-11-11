@@ -1,0 +1,142 @@
+
+
+const express = require('express');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const session = require('express-session');
+const mongoose = require('mongoose');
+const User = require('./models/user'); // Define a User model
+const CollaborationRequest = require('./models/collaborationRequest'); // Define a CollaborationRequest model
+
+const app = express();
+// models/User.js
+const mongoose = require('mongoose');
+const passportLocalMongoose = require('passport-local-mongoose');
+
+const userSchema = new mongoose.Schema({
+username: String,
+email: String,
+password: String,
+});
+
+userSchema.plugin(passportLocalMongoose);
+
+module.exports = mongoose.model('User', userSchema);
+
+// models/CollaborationRequest.js
+const mongoose = require('mongoose');
+
+const collaborationRequestSchema = new mongoose.Schema({
+user: {
+type: mongoose.Schema.Types.ObjectId,
+ref: 'User',
+},
+projectDescription: String,
+skillsNeeded: String,
+deadline: Date,
+contactInfo: String,
+additionalComments: String,
+created_at: {
+type: Date,
+default: Date.now,
+},
+});
+
+module.exports = mongoose.model('CollaborationRequest', collaborationRequestSchema);
+
+// app.js (backend code)
+const express = require('express');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const session = require('express-session');
+const mongoose = require('mongoose');
+const User = require('./models/User'); // Path to your User model
+const CollaborationRequest = require('./models/CollaborationRequest'); // Path to your CollaborationRequest model
+
+const app = express();
+
+
+mongoose.connect('mongodb://localhost/colabApp', { useNewUrlParser: true, useUnifiedTopology: true });
+
+
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(session({ secret: 'your-secret-key', resave: false, saveUninitialized: false }));
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+app.post('/register', async (req, res) => {
+try {
+const { username, email, password } = req.body;
+
+const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+if (existingUser) {
+return res.status(400).json({ error: 'Username or email already exists' });
+}
+
+const newUser = new User({ username, email });
+await newUser.setPassword(password);
+await newUser.save();
+
+req.login(newUser, (err) => {
+if (err) {
+return res.status(500).json({ error: 'Internal server error' });
+}
+return res.status(201).json({ message: 'Registration successful', user: newUser });
+});
+} catch (error) {
+console.error(error);
+res.status(500).json({ error: 'Internal server error' });
+}
+});
+
+
+app.post('/login', passport.authenticate('local'), (req, res) => {
+res.json({ message: 'Login successful', user: req.user });
+});
+
+
+app.post('/collaboration-request', async (req, res) => {
+try {
+const { projectDescription, skillsNeeded, deadline, contactInfo, additionalComments } = req.body;
+
+const newCollaborationRequest = new CollaborationRequest({
+                                                                 user: req.user._id,
+                                                                 projectDescription,
+                                                                 skillsNeeded,
+                                                                 deadline,
+                                                                 contactInfo,
+                                                                 additionalComments,
+                                                         });
+
+await newCollaborationRequest.save();
+
+res.status(201).json({ message: 'Collaboration request created successfully', request: newCollaborationRequest });
+} catch (error) {
+console.error(error);
+res.status(500).json({ error: 'Internal server error' });
+}
+});
+
+// Get Collaboration Requests
+app.get('/collaboration-requests', async (req, res) => {
+try {
+const collaborationRequests = await CollaborationRequest.find().populate('user', 'username');
+
+res.json({ collaborationRequests });
+} catch (error) {
+console.error(error);
+res.status(500).json({ error: 'Internal server error' });
+}
+});
+
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+console.log(`Server is running on port ${PORT}`);
+});
